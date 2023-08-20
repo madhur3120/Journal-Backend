@@ -5,10 +5,10 @@ info:
   version: 0.0.1
 
 servers:
-  - url: http://localhost:5000/api/v1
-    description: localhost environment
   - url: https://journalbackend.onrender.com/api/v1
     description: Render Hosted Server
+  - url: http://localhost:5000/api/v1
+    description: localhost environment
 
 tags:
   - name: Toddle-Backend-Task
