@@ -4,7 +4,7 @@ A backend application featuring authentication endpoints, along with a journal m
 
 ## Deployment
 
-Deployed Link - https://journalbackend.onrender.com/api/v1
+Deployed Link - https://journal-backend-t8gt.onrender.com/api/v1
 
 ## Installation
 
@@ -57,7 +57,7 @@ To run this project, you will need to add the following environment variables to
 
 ## API Reference
 
-API DOCS - https://journalbackend.onrender.com/api-docs/
+API DOCS - https://journal-backend-t8gt.onrender.com/api-docs/
 
 ### Authentication APIs
 
