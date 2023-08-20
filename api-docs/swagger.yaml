@@ -1,0 +1,321 @@
+openapi: 3.0.0
+info:
+  title: Toddle
+  description: Toddle Backend Task .
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:5000/api/v1
+    description: localhost environment
+
+tags:
+  - name: Toddle-Backend-Task
+    description: Toddle Task (Journal Backend Application).
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      in: header
+      name: Authorization
+
+definitions:
+  User:
+    type: object
+    properties:
+      _id:
+        type: string
+      firstname:
+        type: string
+      lastname:
+        type: string
+      email:
+        type: string
+      role:
+        type: string
+        enum: ["STUDENT", "TEACHER"]
+
+  File:
+    type: object
+    properties:
+      _id:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+      file:
+        type: file
+      filetype:
+        type: string
+      uploaded_by:
+        type: string
+      classroom:
+        type: object
+
+paths:
+  /user/register:
+    post:
+      tags: [Auth]
+      summary: Register User
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      requestBody:
+        description: Provide firstname, lastname, email, password, role
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                lastname:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: ["STUDENT", "TEACHER"]
+                  default: STUDENT
+      responses:
+        "201":
+          description: User Registered Successfully
+        "400":
+          description: Validation Error
+        "422":
+          description: Email already exists
+        "500":
+          description: Internal Server Error
+
+  /user/login:
+    post:
+      tags: [Auth]
+      summary: Login User
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      requestBody:
+        description: Provide Email & Password
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: madhur@gmail.com
+                password:
+                  type: string
+                  default: madhur@123
+      responses:
+        "200":
+          description: User Logged In
+        "400":
+          description: Validation Error
+        "500":
+          description: Internal Server Error
+
+  /user/feed:
+    get:
+      tags: [Feed]
+      summary: returns user feed of logged in user (teacher or student)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: returns user feed based on id
+          content:
+            application/json:
+              schema:
+                type: array
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+  /journal:
+    post:
+      tags: [Journal]
+      summary: Create a journal (Teacher)
+      security:
+        - BearerAuth: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      requestBody:
+        description: Enter Journal details
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: Description of the journal entry
+                tagged:
+                  type: array
+                items:
+                  type: integer
+                publishedAt:
+                  type: string
+                  format: date-time
+                attachment:
+                  type: string
+                  format: binary
+                  description: Optional file attachment for the journal entry
+      responses:
+        "201":
+          description: Journal created successfully
+        "400":
+          description: Validation Error
+        "500":
+          description: Internal Server Error
+
+  /journal/{id}:
+    put:
+      tags: [Journal]
+      summary: Update an existing journal (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID of the journal entry to be updated
+          schema:
+            type: integer
+            format: int64
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      requestBody:
+        description: Journal details to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                  description: Updated description of the journal entry
+                attachment_id:
+                  type: integer
+                  description: Updated attachment id of the journal
+                tagged:
+                  type: array
+                  items:
+                    type: integer
+                  description: Array of students tagged in the journal
+                publishedAt:
+                  type: string
+                  format: date-time
+                  pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$"
+                  description: Updated publication date and time for the journal entry
+      responses:
+        "200":
+          description: Journal entry updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        format: int64
+                        description: ID of the updated journal entry
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [failure]
+                  message:
+                    type: string
+        "404":
+          description: Journal entry not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [failure]
+                  message:
+                    type: string
+        "500":
+          description: Internal Server Error
+    delete:
+      tags:
+        - Journal
+      summary: Delete a journal entry (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID of the journal entry to be deleted
+          schema:
+            type: integer
+            format: int64
+      produces:
+        - application/json
+      responses:
+        "204":
+          description: Journal entry deleted successfully
+        "400":
+          description: Validation Error
+        "404":
+          description: Journal entry not found
+        "500":
+          description: Internal Server Error
+  /journal/publish/{id}:
+    post:
+      tags: [Journal]
+      summary: Publish a journal entry (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: ID of the journal entry to be published
+          schema:
+            type: integer
+            format: int64
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Journal entry published successfully
+        "400":
+          description: Validation Error
+        "404":
+          description: Journal entry not found
+        "500":
+          description: Internal Server Error

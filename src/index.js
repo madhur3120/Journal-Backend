@@ -1,36 +1,18 @@
-const dotenv = require(`dotenv`);
-const express = require(`express`);
-dotenv.config({ path: `./.env` });
-const db = require('./config/db');
+const express = require("express");
 const bodyParser = require('body-parser');
-const app = express()
+const { ServerConfig, DB } = require("./config");
+const apiRoutes = require("./routes");
 
-app.use(bodyParser.json()); // for parsing application/json
-app.use(bodyParser.urlencoded({ extended: true }));
+const app = express();
 
-const { createUserTable } = require('./models/user.js');
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Server
-const PORT = process.env.PORT || 8000;
+// Swagger Documentation
+app.use(`/api-docs`, require(`../api-docs/Swagger`));
 
-// Routes
-app.get(`/`, (req, res) => {
-    res.send(`Backend deployed`);
+app.use("/api", apiRoutes);
+
+app.listen(ServerConfig.PORT, () => {
+  console.log(`Sucessfully started the server on PORT : ${ServerConfig.PORT}`);
 });
-app.use('/api', require('./api/routes/Routes'))
-
-app.listen(PORT, () => {
-    console.log(`Server is running at port ${PORT}`);
-});
-
-
-
-db.connect(err => {
-    if (err) {
-        console.error('Error connecting to the database: ', err.stack);
-        return;
-    }
-    console.log('Connected to the database with connection ID: ', db.threadId);
-});
-createUserTable();
-
