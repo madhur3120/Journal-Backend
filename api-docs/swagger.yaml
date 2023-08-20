@@ -1,28 +1,23 @@
-openapi: 3.0.0
+swagger: "2.0"
 info:
   title: Toddle
   description: Toddle Backend Task .
-  version: 0.0.1
-
+  version: 1.0
 servers:
   - url: https://journal-backend-t8gt.onrender.com/api/v1
     description: Render Hosted Server
   - url: http://localhost:5000/api/v1
     description: localhost environment
-
-tags:
-  - name: Toddle-Backend-Task
-    description: Toddle Task (Journal Backend Application).
-
-components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      in: header
-      name: Authorization
-
+schemes:
+  - https
+  - http
+securityDefinitions:
+  JWT:
+    type: apiKey
+    description: JWT token for authentication. Provide the token with the 'Bearer' prefix. Example "Bearer jwt_token"
+    name: Authorization
+    in: header
+basePath: /api/v1
 definitions:
   User:
     type: object
@@ -38,54 +33,58 @@ definitions:
       role:
         type: string
         enum: ["STUDENT", "TEACHER"]
-
-  File:
+  Journal:
     type: object
     properties:
-      _id:
+      journal_id:
         type: string
       name:
         type: string
+      teacher_id:
+        type: integer
       description:
         type: string
+      created_at:
+        type: string
+        format: date-time
       file:
-        type: file
-      filetype:
         type: string
-      uploaded_by:
+      published_at:
         type: string
-      classroom:
-        type: object
-
+        format: date-time
 paths:
   /user/register:
     post:
-      tags: [Auth]
+      tags:
+        - User
       summary: Register User
       consumes:
         - application/json
-      produces:
-        - application/json
-      requestBody:
-        description: Provide firstname, lastname, email, password, role
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                firstname:
-                  type: string
-                lastname:
-                  type: string
-                email:
-                  type: string
-                password:
-                  type: string
-                role:
-                  type: string
-                  enum: ["STUDENT", "TEACHER"]
-                  default: STUDENT
+      parameters:
+        - in: body
+          name: user
+          description: User registration details
+          required: true
+          schema:
+            type: object
+            properties:
+              firstname:
+                type: string
+              lastname:
+                type: string
+              email:
+                type: string
+              password:
+                type: string
+              role:
+                type: string
+                enum: ["STUDENT", "TEACHER"]
+            required:
+              - firstname
+              - lastname
+              - email
+              - password
+              - role
       responses:
         "201":
           description: User Registered Successfully
@@ -95,29 +94,23 @@ paths:
           description: Email already exists
         "500":
           description: Internal Server Error
-
   /user/login:
     post:
-      tags: [Auth]
+      tags:
+        - User
       summary: Login User
       consumes:
         - application/json
-      produces:
-        - application/json
-      requestBody:
-        description: Provide Email & Password
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  default: madhur@gmail.com
-                password:
-                  type: string
-                  default: madhur@123
+      parameters:
+        - in: body
+          name: user
+          schema:
+            type: object
+            properties:
+              email:
+                type: string
+              password:
+                type: string
       responses:
         "200":
           description: User Logged In
@@ -125,61 +118,45 @@ paths:
           description: Validation Error
         "500":
           description: Internal Server Error
-
   /user/feed:
     get:
       tags: [Feed]
       summary: returns user feed of logged in user (teacher or student)
       security:
-        - BearerAuth: []
+        - JWT: []
       responses:
         "200":
           description: returns user feed based on id
-          content:
-            application/json:
-              schema:
-                type: array
         "400":
           description: Bad Request
         "500":
           description: Internal Server Error
   /journal:
     post:
-      tags: [Journal]
-      summary: Create a journal (Teacher)
-      security:
-        - BearerAuth: []
+      tags:
+        - Journal
+      summary: Create a Journal
       consumes:
-        - application/json
-      produces:
-        - application/json
-      requestBody:
-        description: Enter Journal details
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                description:
-                  type: string
-                  description: Description of the journal entry
-                tagged:
-                  type: array
-                items:
-                  type: integer
-                publishedAt:
-                  type: string
-                  format: date-time
-                attachment:
-                  type: string
-                  format: binary
-                  description: Optional file attachment for the journal entry
+        - multipart/form-data
+      security:
+        - JWT: []
+      parameters:
+        - in: formData
+          name: description
+          type: string
+          description: Description of the journal
+        - in: formData
+          name: publishedAt
+          type: string
+          format: date-time
+          description: Publication date and time
+        - in: formData
+          name: file
+          type: file
+          description: Journal attachment
       responses:
-        "201":
+        "200":
           description: Journal created successfully
-        "400":
-          description: Validation Error
         "500":
           description: Internal Server Error
 
@@ -188,7 +165,9 @@ paths:
       tags: [Journal]
       summary: Update an existing journal (Teacher)
       security:
-        - BearerAuth: []
+        - JWT: []
+      consumes:
+        - application/json
       parameters:
         - in: path
           name: id
@@ -197,96 +176,38 @@ paths:
           schema:
             type: integer
             format: int64
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      requestBody:
-        description: Journal details to be updated
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                description:
-                  type: string
-                  description: Updated description of the journal entry
-                attachment_id:
-                  type: integer
-                  description: Updated attachment id of the journal
-                tagged:
-                  type: array
-                  items:
-                    type: integer
-                  description: Array of students tagged in the journal
-                publishedAt:
-                  type: string
-                  format: date-time
-                  pattern: "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$"
-                  description: Updated publication date and time for the journal entry
+        - in: body
+          name: body
+          description: Update fields for the journal entry
+          required: true
+          schema:
+            type: object
+            properties:
+              description:
+                type: string
+                description: Description of the journal entry
       responses:
         "200":
           description: Journal entry updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    enum: [success]
-                  message:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                        format: int64
-                        description: ID of the updated journal entry
         "400":
           description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    enum: [failure]
-                  message:
-                    type: string
         "404":
           description: Journal entry not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    enum: [failure]
-                  message:
-                    type: string
         "500":
           description: Internal Server Error
+
     delete:
       tags:
         - Journal
       summary: Delete a journal entry (Teacher)
       security:
-        - BearerAuth: []
+        - JWT: []
       parameters:
         - in: path
           name: id
-          required: true
-          description: ID of the journal entry to be deleted
           schema:
             type: integer
             format: int64
-      produces:
-        - application/json
       responses:
         "204":
           description: Journal entry deleted successfully
@@ -301,7 +222,7 @@ paths:
       tags: [Journal]
       summary: Publish a journal entry (Teacher)
       security:
-        - BearerAuth: []
+        - JWT: []
       parameters:
         - in: path
           name: id
@@ -310,8 +231,6 @@ paths:
           schema:
             type: integer
             format: int64
-      produces:
-        - application/json
       responses:
         "200":
           description: Journal entry published successfully
