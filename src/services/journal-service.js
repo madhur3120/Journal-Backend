@@ -1,5 +1,5 @@
 const { StatusCodes } = require("http-status-codes");
-const { JournalRepository, AttachmentRepository, JournalStudentMappingRepository, PublishJournalRepository } = require("../repositories");
+const { UserRepository, JournalRepository, AttachmentRepository, JournalStudentMappingRepository, PublishJournalRepository } = require("../repositories");
 const AppError = require("../utils/errors/app-error");
 const { Cloudinary, GenerateDate } = require("../utils/commons");
 const { PublishJournal } = require("../models");
@@ -8,6 +8,7 @@ const journalRepository = new JournalRepository();
 const attachmentRepository = new AttachmentRepository();
 const journalStudentMappingRepository = new JournalStudentMappingRepository();
 const publishJournalRepository = new PublishJournalRepository();
+const userRepository=new UserRepository();
 
 async function addJournalEntry(data) {
     try {
@@ -27,11 +28,13 @@ async function addJournalEntry(data) {
         if (data.tagged) {
             const studentsTagged = data.tagged;
             studentsTagged.forEach(async (student_id) => {
-                let found=await journalRepository.getById(student_id);
-                await journalStudentMappingRepository.create({
-                    journal_id: journalId,
-                    student_id
-                })
+                let found = await userRepository.getById(student_id);
+                if (found) {
+                    await journalStudentMappingRepository.create({
+                        journal_id: journalId,
+                        student_id
+                    })
+                }
             });
         }
         let datetime = GenerateDate.getCurrentDateTime();

@@ -15,6 +15,9 @@ async function addJournalEntry(req, res) {
             tagged: req.body.tagged,
             publishedAt: req.body.publishedAt
         }
+        const taggedString=req.body.tagged;
+        const taggedArray = taggedString.split(',').map(Number);
+        journalData.tagged=taggedArray;
         if (req.file) {
             journalData.attachment = req.file;
         }

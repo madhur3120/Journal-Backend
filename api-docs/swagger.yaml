@@ -149,11 +149,17 @@ paths:
           name: publishedAt
           type: string
           format: date-time
-          description: Publication date and time
+          description: Publication date and time (YYYY-MM-DD HH:MM:SS)
         - in: formData
           name: file
           type: file
           description: Journal attachment
+        - in: formData
+          name: tagged
+          type: array
+            items:
+              type: integer
+          description: Enter comma separated student Ids Ex - 1,2,3
       responses:
         "200":
           description: Journal created successfully
