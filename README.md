@@ -1,4 +1,4 @@
-# Journal Backend Application - Toddle
+# Journal Backend Application 
 
 A backend application featuring authentication endpoints, along with a journal module tailored for both teachers and students.
 
