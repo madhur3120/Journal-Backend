@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
-  title: Toddle
-  description: Toddle Backend Task .
+  title: Journal Backend Application
+  description: Tailored journal modules for teachers and students
   version: 1.0
 servers:
   - url: https://journal-backend-t8gt.onrender.com/api/v1
