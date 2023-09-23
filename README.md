@@ -6,6 +6,11 @@ A backend application featuring authentication endpoints, along with a journal m
 
 Deployed Link - https://journal-backend-t8gt.onrender.com/api/v1
 
+## Features
+- **Authentication Service**: Simplified authentication endpoints allowing public access; with password comparison functionality. If the JWT is missing or invalid, the request will be rejected.
+- **Role-based Journal Feeds**: Upon logging in, the feed is presented based on the user role, be it teacher or student.
+- **Journal Management for Teachers**: Comprehensive CRUD API operations enable creation, updating, deletion, tagging, and timely publication of journal entries.
+
 ## Installation
 
 ```bash
@@ -21,17 +26,7 @@ Go to `http://localhost:5000/` to view the website
 
 **Server:** NodeJS, ExpressJS, GraphQL, RestAPIs
 
-## Features
 
-- **Authentication Endpoint**: Public Endpoint - Accessible to all without any restrictions.
-
-This is a mock authentication service.
-Any username/password will be accepted, though password comparison is present.
-
-- **Journal REST API Endpoints:**
-
-Protected Endpoints - All the following endpoints are protected. The JWT obtained from the authentication endpoint needs to be attached to every request.
-If the JWT is missing or invalid, the request will be rejected.
 
 ## Environment Variables
 
