@@ -7,6 +7,5 @@ CREATE TABLE
         description TEXT NOT NULL,
         attachment_id INT,
         FOREIGN KEY (teacher_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (attachment_id) REFERENCES attachments(id) ON DELETE
-        SET NULL
+        FOREIGN KEY (attachment_id) REFERENCES attachments(id) ON DELETE SET NULL
     );

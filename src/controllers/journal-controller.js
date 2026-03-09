@@ -5,7 +5,7 @@ const { SuccessResponse, ErrorResponse } = require("../utils/commons");
 
 /**
  * POST : /journals
- * req.body {teacherId: 1, description: 'Sample description', attachmentId: 'sample_attachment_id'}
+ * req.body {description, tagged, publishedAt, categoryId, isDraft}
  */
 async function addJournalEntry(req, res) {
     try {
@@ -13,23 +13,37 @@ async function addJournalEntry(req, res) {
             teacher_id: req.user.id,
             description: req.body.description,
             tagged: req.body.tagged,
-            publishedAt: req.body.publishedAt
+            publishedAt: req.body.publishedAt,
+            category_id: req.body.categoryId ? parseInt(req.body.categoryId) : null,
+            is_draft: req.body.isDraft === 'true' || req.body.isDraft === true
+        };
+
+        // Parse tagged students
+        if (req.body.tagged) {
+            const taggedString = req.body.tagged;
+            const taggedArray = typeof taggedString === 'string' 
+                ? taggedString.split(',').map(Number).filter(n => !isNaN(n))
+                : taggedString;
+            journalData.tagged = taggedArray;
         }
-        const taggedString=req.body.tagged;
-        const taggedArray = taggedString.split(',').map(Number);
-        journalData.tagged=taggedArray;
+
         if (req.file) {
             journalData.attachment = req.file;
         }
+
         const journalId = await JournalService.addJournalEntry(journalData);
+        
         SuccessResponse.data = { id: journalId };
+        SuccessResponse.message = journalData.is_draft 
+            ? "Draft saved successfully" 
+            : "Journal entry created successfully";
         return res
             .status(StatusCodes.CREATED)
             .json(SuccessResponse);
     } catch (error) {
         ErrorResponse.error = error;
         return res
-            .status(StatusCodes.BAD_REQUEST)
+            .status(error.statusCode || StatusCodes.BAD_REQUEST)
             .json(ErrorResponse);
     }
 }
@@ -98,9 +112,79 @@ async function publishJournalEntry(req, res) {
     }
 }
 
+/**
+ * POST : /journals/drafts/:id/publish
+ * Publish a draft journal
+ */
+async function publishDraft(req, res) {
+    try {
+        const journalId = parseInt(req.params.id);
+        const teacherId = req.user.id;
+        const publishedAt = req.body.publishedAt || null;
+
+        const result = await JournalService.publishDraft(journalId, teacherId, publishedAt);
+        
+        SuccessResponse.data = result;
+        SuccessResponse.message = "Draft published successfully";
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res
+            .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse);
+    }
+}
+
+/**
+ * GET : /journals/drafts
+ * Get all drafts for the current teacher
+ */
+async function getDrafts(req, res) {
+    try {
+        const teacherId = req.user.id;
+        const drafts = await JournalService.getDrafts(teacherId);
+        
+        SuccessResponse.data = drafts;
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res
+            .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse);
+    }
+}
+
+/**
+ * GET : /journals/:id
+ * Get a journal by ID
+ */
+async function getJournalById(req, res) {
+    try {
+        const journalId = parseInt(req.params.id);
+        const journal = await JournalService.getJournalById(journalId);
+        
+        SuccessResponse.data = journal;
+        return res
+            .status(StatusCodes.OK)
+            .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res
+            .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)
+            .json(ErrorResponse);
+    }
+}
+
 module.exports = {
     addJournalEntry,
     deleteJournalEntry,
     updateJournalEntry,
-    publishJournalEntry
+    publishJournalEntry,
+    publishDraft,
+    getDrafts,
+    getJournalById
 };

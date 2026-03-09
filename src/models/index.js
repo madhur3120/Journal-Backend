@@ -3,5 +3,8 @@ module.exports = {
     Attachment: require('./Attachment'),
     Journal: require('./Journal'),
     PublishJournal: require('./PublishJournal'),
-    JournalStudentMapping: require('./JournalStudentMapping')
+    JournalStudentMapping: require('./JournalStudentMapping'),
+    Category: require('./Category'),
+    Comment: require('./Comment'),
+    ReadReceipt: require('./ReadReceipt')
 }
